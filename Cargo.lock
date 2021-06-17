@@ -1342,7 +1342,7 @@ dependencies = [
 [[package]]
 name = "rust-synth"
 version = "0.1.0"
-source = "git+https://github.com/vitobasso/rust-synth.git?branch=no-gui#08b2e8e71a556e924e9f4629b0c1b16834f41ae3"
+source = "git+https://github.com/vitobasso/rust-synth.git#1d9fccbf8b3334667169a11337590ed65ac01315"
 dependencies = [
  "cpal",
  "num-derive 0.2.5",
