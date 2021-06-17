@@ -5,3 +5,5 @@ authors = ["Victor Basso <vitobasso@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+rust-synth = { git = "https://github.com/vitobasso/rust-synth.git", branch = "no-gui" }
+piston_window = "0.87.0"
