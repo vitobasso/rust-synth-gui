@@ -1,7 +1,7 @@
 use piston_window::{OpenGL, PistonWindow, WindowSettings, Event::*, Input};
 use crate::keymap;
 use std::sync::mpsc::Sender;
-use rust_synth::core::control::manual_controller::Command;
+use rust_synth::core::control::tools::Command;
 
 const TITLE: &str = "Sintetizador Maravilhoso";
 const WINDOW_SIZE: [f64;2] = [800., 800.];

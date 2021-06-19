@@ -1,9 +1,9 @@
 use piston_window::{Button::*, ButtonArgs, ButtonState::*, Input, Input::*, Key, Motion, Motion::*};
-use rust_synth::core::control::{
-    instrument_player::{Command::*, Discriminator, id_discr},
-    manual_controller::Command::{self, *},
-    transposer::Command::*, loops::Command::*};
-use rust_synth::core::music_theory::pitch::{Pitch, PitchClass::*};
+use rust_synth::core::{
+    control::{synth::{Command::*, Discriminator, id_discr},tools::Command::{self, *}},
+    tools::{transposer::Command::*, loops::Command::*},
+    music_theory::{pitch::Pitch, pitch_class::PitchClass::*},
+};
 
 pub fn handle_input(input: &Input, window_size: [f64;2]) -> Vec<Command> {
     match input {
@@ -19,7 +19,7 @@ fn handle_button(args: &ButtonArgs) -> Vec<Command> {
             note_on(key)
                 .or_else(|| patches(key))
                 .or_else(|| loop_rec(key))
-                .or_else(|| pulse_rec(key))
+                .or_else(|| tap_tempo(key))
                 .or_else(|| transpose(key))
                 .map_or(vec![], |v| vec![v]),
         (Release, Keyboard(key)) =>
@@ -125,9 +125,9 @@ fn loop_rec(key: Key) -> Option<Command> {
     }
 }
 
-fn pulse_rec(key: Key) -> Option<Command> {
+fn tap_tempo(key: Key) -> Option<Command> {
     match key {
-        Key::Space =>  Some(PulseRecord),
+        Key::Space =>  Some(TapTempo),
         _ => None,
     }
 }
