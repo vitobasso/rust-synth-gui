@@ -6,4 +6,6 @@ edition = "2018"
 
 [dependencies]
 rust-synth = { git = "https://github.com/vitobasso/rust-synth.git" }
-piston_window = "0.87.0"
+piston_window = "0.120.0"
+conrod_core = "0.74.0"
+conrod_piston = "0.74.0"

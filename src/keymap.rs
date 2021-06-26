@@ -31,7 +31,7 @@ fn handle_button(args: &ButtonArgs) -> Vec<Command> {
 
 fn handle_move(motion: &Motion, window_size: [f64;2]) -> Vec<Command> {
     match motion {
-        MouseCursor(x, y) => {
+        MouseCursor([x, y]) => {
             let norm_x = x / window_size[0] as f64;
             let norm_y = y / window_size[1] as f64;
             let command = Instrument(ModXY(norm_x, norm_y));

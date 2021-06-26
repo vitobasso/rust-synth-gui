@@ -1,7 +1,11 @@
+#[macro_use] extern crate conrod_core;
+
 use std::env::{args, Args};
 use rust_synth::io;
 
 mod gui;
+mod widgets;
+mod rendering;
 mod keymap;
 
 fn main() {
