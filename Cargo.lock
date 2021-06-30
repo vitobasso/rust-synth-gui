@@ -601,9 +601,9 @@ dependencies = [
 
 [[package]]
 name = "hermit-abi"
-version = "0.1.18"
+version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "322f4de77956e22ed0e5032c359a0f1273f1f7f0d79bfa3b8ffbc730d7fbcc5c"
+checksum = "62b467343b94ba476dcb2500d242dadbb39557df889310ac77c5d99100aaac33"
 dependencies = [
  "libc",
 ]
@@ -1342,7 +1342,7 @@ dependencies = [
 [[package]]
 name = "rust-synth"
 version = "0.1.0"
-source = "git+https://github.com/vitobasso/rust-synth.git#1d9fccbf8b3334667169a11337590ed65ac01315"
+source = "git+https://github.com/vitobasso/rust-synth.git#c0659d87ddd09510e06f4694b3c6be80c3bb14a4"
 dependencies = [
  "cpal",
  "num-derive 0.2.5",
@@ -1361,9 +1361,9 @@ dependencies = [
 
 [[package]]
 name = "rustc-demangle"
-version = "0.1.19"
+version = "0.1.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "410f7acf3cb3a44527c5d9546bad4bf4e6c460915d5f9f2fc524498bfe8f70ce"
+checksum = "dead70b0b5e03e9c814bcb6b01e03e68f7c57a80aa48c72ec92152ab3e818d49"
 
 [[package]]
 name = "rustc-hash"

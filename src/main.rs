@@ -3,6 +3,7 @@ use rust_synth::io;
 
 mod gui;
 mod keymap;
+mod rendering;
 
 fn main() {
     match midi_file_argument() {
