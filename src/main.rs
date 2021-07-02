@@ -12,8 +12,8 @@ fn main() {
             gui::start(None);
         },
         None => {
-            let commands_out = io::start_manual();
-            gui::start(Some(commands_out));
+            let channels = io::start_manual();
+            gui::start(Some(channels));
         },
     }
 }
