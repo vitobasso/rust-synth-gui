@@ -24,7 +24,7 @@ pub fn draw(view: View, window: &mut PistonWindow, glyphs: &mut Glyphs, e: &Even
         if let Some(arp) = view.arpeggiator {
             //arp.phrase.
             draw_text("index:", 10., 160., glyphs, c, g);
-            draw_meter(view.arp_index % 1., 100., 160., c, g);
+            draw_meter(view.arp_index, 100., 160., c, g);
 
             let holding = arp.holding_pitch.map(|p| format!("holding: {}", p));
             let playing = arp.playing_pitch.map(|p| format!("playing: {}", p));
