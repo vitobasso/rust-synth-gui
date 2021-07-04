@@ -4,16 +4,17 @@ use rust_synth::core::{
     tools::{transposer::Command::*, loops::Command::*},
     music_theory::{pitch::Pitch, pitch_class::PitchClass::*},
 };
+use crate::control::{Control, Mode};
 
-pub fn handle_input(input: &Input, window_size: [f64;2]) -> Vec<Command> {
+pub fn handle_input(input: &Input, window_size: [f64;2], control: &mut Control) -> Vec<Command> {
     match input {
-        Button(args) => handle_button(args),
+        Button(args) => handle_button(args, control),
         Move(args) => handle_move(args, window_size),
         _ => vec![],
     }
 }
 
-fn handle_button(args: &ButtonArgs) -> Vec<Command> {
+fn handle_button(args: &ButtonArgs, control: &mut Control) -> Vec<Command> { //TODO Option<Command> ?
     match (args.state, args.button) {
         (Press, Keyboard(key))   =>
             note_on(key)
@@ -24,6 +25,7 @@ fn handle_button(args: &ButtonArgs) -> Vec<Command> {
                 .map_or(vec![], |v| vec![v]),
         (Release, Keyboard(key)) =>
             note_off(key)
+                .or_else(|| mode(key, control))
                 .map_or(vec![], |v| vec![v]),
         _ => vec![],
     }
@@ -144,4 +146,11 @@ fn transpose(key: Key) -> Option<Command> {
         Key::RightBracket => Some(Transposer(TransposeKey(1))),
         _ => None,
     }
+}
+
+fn mode(key: Key, control: &mut Control) -> Option<Command> {
+    if key == Key::Tab {
+        control.mode = Mode::Editing(None);
+    }
+    None
 }

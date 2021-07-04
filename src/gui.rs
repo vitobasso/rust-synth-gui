@@ -29,7 +29,7 @@ pub fn start(channels: Option<(Sender<Command>, Receiver<View>)>) {
 }
 
 fn manual_loop(window: &mut PistonWindow, glyphs: &mut Glyphs, commands_out: Sender<Command>, view_in: Receiver<View>) {
-    let control = Control::new();
+    let mut control = Control::new();
     while let Some(e) = window.next() {
         match &e {
             Input(input) => {

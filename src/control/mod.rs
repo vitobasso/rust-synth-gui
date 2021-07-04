@@ -4,13 +4,12 @@ use rust_synth::core::control::tools::Command;
 mod playing;
 mod editing;
 
-#[derive(Copy, Clone, Debug)]
 pub enum EditTarget {
     Oscillator, Filter, Adsr, Lfo, Arpeggiator
 }
 
 enum Mode {
-    Editing(EditTarget), Playing
+    Editing(Option<EditTarget>), Playing
 }
 
 pub struct Control {
@@ -23,10 +22,10 @@ impl Control {
         Self { mode: Mode::Playing }
     }
 
-    pub fn handle_input(&self, input: &Input, window_size: [f64;2]) -> Vec<Command> {
+    pub fn handle_input(&mut self, input: &Input, window_size: [f64;2]) -> Vec<Command> {
         match self.mode {
-            Mode::Editing(target) => editing::handle_input(&input, target),
-            Mode::Playing => playing::handle_input(&input, window_size),
+            Mode::Editing(_) => editing::handle_input(&input, self),
+            Mode::Playing => playing::handle_input(&input, window_size, self),
         }
     }
 
