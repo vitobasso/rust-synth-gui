@@ -44,7 +44,7 @@ pub fn draw_oscillator(view: oscillator::View, x: Scalar, y: Scalar, glyphs: &mu
         Square => draw_text("square", x, y, glyphs, c, g),
         Pulse(value) => {
             draw_text("pulse", x, y, glyphs, c, g);
-            draw_meter_vertical(value, x + 10., y, c, g);
+            draw_meter_horizontal(value, x + 80., y, c, g);
         }
         Mix { voices } => {
             draw_text("mix", x, y, glyphs, c, g);
@@ -58,15 +58,15 @@ pub fn draw_oscillator(view: oscillator::View, x: Scalar, y: Scalar, glyphs: &mu
 
 pub fn draw_filter(view: filter::View, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Context, g: &mut G2d) {
     draw_text("cutoff:", x, y, glyphs, c, g);
-    draw_meter_vertical(view.cutoff, x + 100., y, c, g);
+    draw_meter_vertical(view.cutoff, x + 80., y, c, g);
     draw_text("resonance:", x + 120., y, glyphs, c, g);
     draw_meter_vertical(view.resonance, x + 240., y, c, g);
 }
 
 fn draw_arpeggiator(view: arpeggiator::View, index: f64, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Context, g: &mut G2d) {
     //arp.phrase.
-    draw_text("index:", x, y, glyphs, c, g);
-    draw_meter_horizontal(index, x + 100., y, c, g);
+    draw_text("arpeggiator:", x, y, glyphs, c, g);
+    draw_meter_horizontal(index, x + 140., y, c, g);
 
     let holding = view.holding_pitch.map(|p| format!("holding: {}", p));
     let playing = view.playing_pitch.map(|p| format!("playing: {}", p));
@@ -98,12 +98,12 @@ pub fn draw_text(text: &str, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Conte
 
 pub fn draw_meter_vertical(value: f64, x: Scalar, y: Scalar, c: Context, g: &mut G2d) {
     let c2 = c.trans(x, y);
-    let rect = rectangle::centered_square(0., -value * 14., 2.);
+    let rect = [0., -value * 14., 10., 4.];
     rectangle(WHITE, rect, c2.transform, g);
 }
 
 pub fn draw_meter_horizontal(value: f64, x: Scalar, y: Scalar, c: Context, g: &mut G2d) {
     let c2 = c.trans(x, y);
-    let rect = rectangle::centered_square(value * 14., 0., 2.);
+    let rect = [value * 14., -10., 4., 10.];
     rectangle(WHITE, rect, c2.transform, g);
 }
