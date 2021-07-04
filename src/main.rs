@@ -1,8 +1,9 @@
 use std::env::{args, Args};
+
 use rust_synth::io;
 
 mod gui;
-mod keymap;
+mod control;
 mod rendering;
 
 fn main() {
