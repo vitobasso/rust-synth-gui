@@ -18,18 +18,18 @@ fn handle_button(args: &ButtonArgs, control: &mut Control) -> Vec<Command> {
 
 fn handle_key(key: Key, control: &mut Control) -> Vec<Command> {
     match control.mode {
-        Mode::Editing(None) => handle_from_main(key, control),
-        Mode::Editing(Some(EditTarget::Oscillator)) => handle_from_oscillator(key, control),
-        Mode::Editing(Some(EditTarget::Filter)) => handle_from_filter(key, control),
-        Mode::Editing(Some(EditTarget::Adsr)) => handle_from_adsr(key, control),
-        Mode::Editing(Some(EditTarget::Lfo)) => handle_from_lfo(key, control),
-        Mode::Editing(Some(EditTarget::Arpeggiator)) => handle_from_arpeggiator(key, control),
+        Mode::Editing(None) => main_menu(key, control),
+        Mode::Editing(Some(EditTarget::Oscillator)) => oscillator(key, control),
+        Mode::Editing(Some(EditTarget::Filter)) => filter(key, control),
+        Mode::Editing(Some(EditTarget::Adsr)) => adsr(key, control),
+        Mode::Editing(Some(EditTarget::Lfo)) => lfo(key, control),
+        Mode::Editing(Some(EditTarget::Arpeggiator)) => arpeggiator(key, control),
         _ => panic!(),
     }
 
 }
 
-fn handle_from_main(key: Key, control: &mut Control) -> Vec<Command> {
+fn main_menu(key: Key, control: &mut Control) -> Vec<Command> {
     match key {
         Key::Tab | Key::Escape => control.mode = Mode::Playing,
         Key::O => control.mode = Mode::Editing(Some(EditTarget::Oscillator)),
@@ -42,7 +42,7 @@ fn handle_from_main(key: Key, control: &mut Control) -> Vec<Command> {
     vec![]
 }
 
-fn handle_from_oscillator(key: Key, control: &mut Control) -> Vec<Command> {
+fn oscillator(key: Key, control: &mut Control) -> Vec<Command> {
     match key {
         Key::Tab | Key::Escape => control.mode = Mode::Playing,
         _ => (),
@@ -50,7 +50,7 @@ fn handle_from_oscillator(key: Key, control: &mut Control) -> Vec<Command> {
     vec![]
 }
 
-fn handle_from_filter(key: Key, control: &mut Control) -> Vec<Command> {
+fn filter(key: Key, control: &mut Control) -> Vec<Command> {
     match key {
         Key::Tab | Key::Escape => control.mode = Mode::Playing,
         _ => (),
@@ -58,7 +58,7 @@ fn handle_from_filter(key: Key, control: &mut Control) -> Vec<Command> {
     vec![]
 }
 
-fn handle_from_adsr(key: Key, control: &mut Control) -> Vec<Command> {
+fn adsr(key: Key, control: &mut Control) -> Vec<Command> {
     match key {
         Key::Tab | Key::Escape => control.mode = Mode::Playing,
         _ => (),
@@ -66,7 +66,7 @@ fn handle_from_adsr(key: Key, control: &mut Control) -> Vec<Command> {
     vec![]
 }
 
-fn handle_from_lfo(key: Key, control: &mut Control) -> Vec<Command> {
+fn lfo(key: Key, control: &mut Control) -> Vec<Command> {
     match key {
         Key::Tab | Key::Escape => control.mode = Mode::Playing,
         _ => (),
@@ -74,7 +74,7 @@ fn handle_from_lfo(key: Key, control: &mut Control) -> Vec<Command> {
     vec![]
 }
 
-fn handle_from_arpeggiator(key: Key, control: &mut Control) -> Vec<Command> {
+fn arpeggiator(key: Key, control: &mut Control) -> Vec<Command> {
     match key {
         Key::Tab | Key::Escape => control.mode = Mode::Playing,
         _ => (),
