@@ -1,24 +1,25 @@
 use std::collections::HashMap;
 use piston_window::{PistonWindow, Event, Context, G2d, clear, text, rectangle, Glyphs, Transformed};
 use piston_window::math::Scalar;
-use rust_synth::core::control::tools::View;
+use rust_synth::core::control::tools;
 use rust_synth::core::control::synth::Id;
-use rust_synth::core::synth::filter;
+use rust_synth::core::synth::{filter, oscillator};
 use rust_synth::core::tools::{arpeggiator, transposer};
 use rust_synth::core::music_theory::pitch::Pitch;
+use rust_synth::core::music_theory::Hz;
 
 pub type Color = [f32; 4];
 const BLACK: Color = [0.0, 0.0, 0.0, 1.0];
 const WHITE: Color = [1.0, 1.0, 1.0, 1.0];
 
-pub fn draw(view: View, window: &mut PistonWindow, glyphs: &mut Glyphs, e: &Event) {
+pub fn draw(view: tools::View, window: &mut PistonWindow, glyphs: &mut Glyphs, e: &Event) {
     window.draw_2d(e, |c: Context, g: &mut G2d| {
         clear(BLACK, g);
 
         let patch = format!("patch: {}", view.selected_patch.to_string());
         draw_text(patch.as_str(), 10., 40., glyphs, c, g);
-
-        draw_filter(view.synth.instrument.filter, 10., 60., glyphs, c, g);
+        draw_oscillator(view.synth.instrument.oscillator, 10., 60., glyphs, c, g);
+        draw_filter(view.synth.instrument.filter, 10., 80., glyphs, c, g);
 
         if let Some(arp) = view.arpeggiator {
             draw_arpeggiator(arp, view.arp_index, 10., 160., glyphs, c, g);
@@ -35,17 +36,37 @@ pub fn draw(view: View, window: &mut PistonWindow, glyphs: &mut Glyphs, e: &Even
     });
 }
 
+pub fn draw_oscillator(view: oscillator::View, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Context, g: &mut G2d) {
+    use oscillator::View::*;
+    match view {
+        Sine => draw_text("sine", x, y, glyphs, c, g),
+        Saw => draw_text("saw", x, y, glyphs, c, g),
+        Square => draw_text("square", x, y, glyphs, c, g),
+        Pulse(value) => {
+            draw_text("pulse", x, y, glyphs, c, g);
+            draw_meter_vertical(value, x + 10., y, c, g);
+        }
+        Mix { voices } => {
+            draw_text("mix", x, y, glyphs, c, g);
+            let spread: Vec<Hz> = voices.iter().map(|v| v.tuning).collect();
+            for v in spread {
+                draw_meter_horizontal(v, x + 100., y, c, g);
+            }
+        }
+    }
+}
+
 pub fn draw_filter(view: filter::View, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Context, g: &mut G2d) {
     draw_text("cutoff:", x, y, glyphs, c, g);
-    draw_meter(view.cutoff, x + 100., y, c, g);
+    draw_meter_vertical(view.cutoff, x + 100., y, c, g);
     draw_text("resonance:", x + 120., y, glyphs, c, g);
-    draw_meter(view.resonance, x + 240., y, c, g);
+    draw_meter_vertical(view.resonance, x + 240., y, c, g);
 }
 
 fn draw_arpeggiator(view: arpeggiator::View, index: f64, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Context, g: &mut G2d) {
     //arp.phrase.
     draw_text("index:", x, y, glyphs, c, g);
-    draw_meter(index, x + 100., y, c, g);
+    draw_meter_horizontal(index, x + 100., y, c, g);
 
     let holding = view.holding_pitch.map(|p| format!("holding: {}", p));
     let playing = view.playing_pitch.map(|p| format!("playing: {}", p));
@@ -75,8 +96,14 @@ pub fn draw_text(text: &str, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Conte
         .draw(text, glyphs, &c2.draw_state, c2.transform, g).unwrap();
 }
 
-pub fn draw_meter(value: f64, x: Scalar, y: Scalar, c: Context, g: &mut G2d) {
+pub fn draw_meter_vertical(value: f64, x: Scalar, y: Scalar, c: Context, g: &mut G2d) {
     let c2 = c.trans(x, y);
     let rect = rectangle::centered_square(0., -value * 14., 2.);
+    rectangle(WHITE, rect, c2.transform, g);
+}
+
+pub fn draw_meter_horizontal(value: f64, x: Scalar, y: Scalar, c: Context, g: &mut G2d) {
+    let c2 = c.trans(x, y);
+    let rect = rectangle::centered_square(value * 14., 0., 2.);
     rectangle(WHITE, rect, c2.transform, g);
 }
