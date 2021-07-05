@@ -18,7 +18,6 @@ fn handle_button(args: &ButtonArgs, control: &mut Control) -> Vec<Command> { //T
     match (args.state, args.button) {
         (Press, Keyboard(key))   =>
             note_on(key)
-                .or_else(|| patches(key))
                 .or_else(|| loop_rec(key))
                 .or_else(|| tap_tempo(key))
                 .or_else(|| transpose(key))
@@ -91,22 +90,6 @@ fn pitches(key: Key) -> Option<(Pitch, Discriminator)> { //TODO shift => sharp p
         Key::Period =>    Some((Pitch::new(B, 3), 1)),
         Key::Slash =>     Some((Pitch::new(C, 4), 1)),
 
-        _ => None,
-    }
-}
-
-fn patches(key: Key) -> Option<Command> {
-    match key {
-        Key::D1 => Some(SetPatchNo(0)),
-        Key::D2 => Some(SetPatchNo(1)),
-        Key::D3 => Some(SetPatchNo(2)),
-        Key::D4 => Some(SetPatchNo(3)),
-        Key::D5 => Some(SetPatchNo(4)),
-        Key::D6 => Some(SetPatchNo(5)),
-        Key::D7 => Some(SetPatchNo(6)),
-        Key::D8 => Some(SetPatchNo(7)),
-        Key::D9 => Some(SetPatchNo(8)),
-        Key::D0 => Some(SetPatchNo(9)),
         _ => None,
     }
 }

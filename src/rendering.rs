@@ -16,8 +16,6 @@ pub fn draw(view: tools::View, window: &mut PistonWindow, glyphs: &mut Glyphs, e
     window.draw_2d(e, |c: Context, g: &mut G2d| {
         clear(BLACK, g);
 
-        let patch = format!("patch: {}", view.selected_patch.to_string());
-        draw_text(patch.as_str(), 10., 40., glyphs, c, g);
         draw_oscillator(view.synth.instrument.oscillator, 10., 60., glyphs, c, g);
         draw_filter(view.synth.instrument.filter, 10., 80., glyphs, c, g);
 
