@@ -62,10 +62,11 @@ pub fn draw_oscillator(view: oscillator::View, x: Scalar, y: Scalar, glyphs: &mu
 }
 
 pub fn draw_filter(view: filter::View, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Context, g: &mut G2d) {
-    draw_text("cutoff:", x, y, glyphs, c, g);
-    draw_meter_vertical(view.cutoff, x + 80., y, c, g);
-    draw_text("resonance:", x + 120., y, glyphs, c, g);
-    draw_meter_vertical(view.resonance, x + 240., y, c, g);
+    draw_text(format!("{:?}", view.filter_type).as_str(), x, y, glyphs, c, g);
+    draw_text("cutoff:", x + 60., y, glyphs, c, g);
+    draw_meter_vertical(view.cutoff, x + 140., y, c, g);
+    draw_text("resonance:", x + 180., y, glyphs, c, g);
+    draw_meter_vertical(view.resonance, x + 300., y, c, g);
 }
 
 fn draw_arpeggiator(view: arpeggiator::View, index: f64, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Context, g: &mut G2d) {

@@ -2,7 +2,7 @@ use piston_window::{Input, Input::Button, ButtonArgs, ButtonState::Release, Butt
 use crate::control::{Control, Mode, EditTarget};
 use rust_synth::core::control::synth::Command::SetPatch;
 use rust_synth::core::control::tools::Command;
-use rust_synth::core::synth::oscillator;
+use rust_synth::core::synth::{oscillator, filter};
 
 pub fn handle_input(input: &Input, control: &mut Control) -> Vec<Command>{
     match input {
@@ -45,13 +45,10 @@ fn main_menu(key: Key, control: &mut Control) -> Vec<Command> {
 }
 
 fn oscillator(key: Key, control: &mut Control) -> Vec<Command> {
-    let mut set = |osc: oscillator::Specs| {
+    let mut set = |specs: oscillator::Specs| {
         control.mode = Mode::Editing(None);
-        let command = {
-            let mut instrument = control.instrument.clone();
-            instrument.oscillator = osc;
-            Command::Instrument(SetPatch(instrument))
-        };
+        control.instrument.oscillator = specs;
+        let command = Command::Instrument(SetPatch(control.instrument.clone()));
         vec![command]
     };
     use oscillator::Specs::*;
@@ -67,8 +64,19 @@ fn oscillator(key: Key, control: &mut Control) -> Vec<Command> {
 }
 
 fn filter(key: Key, control: &mut Control) -> Vec<Command> {
+    let mut set = |specs: filter::Specs| {
+        control.mode = Mode::Editing(None);
+        control.instrument.filter = specs;
+        let command = Command::Instrument(SetPatch(control.instrument.clone()));
+        vec![command]
+    };
+    use filter::Specs::*;
     match key {
         Key::Tab | Key::Escape => playing_mode(control),
+        Key::D1 => set(LPF),
+        Key::D2 => set(HPF),
+        Key::D3 => set(BPF),
+        Key::D4 => set(Notch),
         _ => vec![],
     }
 }
