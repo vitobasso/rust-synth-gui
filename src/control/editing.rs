@@ -1,6 +1,8 @@
 use piston_window::{Input, Input::Button, ButtonArgs, ButtonState::Release, Button::Keyboard, Key};
-use rust_synth::core::control::tools::Command;
 use crate::control::{Control, Mode, EditTarget};
+use rust_synth::core::control::synth::Command::SetPatch;
+use rust_synth::core::control::tools::Command;
+use rust_synth::core::synth::instrument;
 
 pub fn handle_input(input: &Input, control: &mut Control) -> Vec<Command>{
     match input {
@@ -44,10 +46,13 @@ fn main_menu(key: Key, control: &mut Control) -> Vec<Command> {
 
 fn oscillator(key: Key, control: &mut Control) -> Vec<Command> {
     match key {
-        Key::Tab | Key::Escape => control.mode = Mode::Playing,
-        _ => (),
+        Key::Tab | Key::Escape => {
+            control.mode = Mode::Playing;
+            vec![]
+        },
+        Key::D1 => vec![Command::Instrument(SetPatch(instrument::Specs::default()))], //TODO set specific oscillators
+        _ => vec![],
     }
-    vec![]
 }
 
 fn filter(key: Key, control: &mut Control) -> Vec<Command> {
