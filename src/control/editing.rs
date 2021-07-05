@@ -2,7 +2,7 @@ use piston_window::{Input, Input::Button, ButtonArgs, ButtonState::Release, Butt
 use crate::control::{Control, Mode, EditTarget};
 use rust_synth::core::control::synth::Command::SetPatch;
 use rust_synth::core::control::tools::Command;
-use rust_synth::core::synth::instrument;
+use rust_synth::core::synth::oscillator;
 
 pub fn handle_input(input: &Input, control: &mut Control) -> Vec<Command>{
     match input {
@@ -45,44 +45,56 @@ fn main_menu(key: Key, control: &mut Control) -> Vec<Command> {
 }
 
 fn oscillator(key: Key, control: &mut Control) -> Vec<Command> {
+    let mut set = |osc: oscillator::Specs| {
+        control.mode = Mode::Editing(None);
+        let command = {
+            let mut instrument = control.instrument.clone();
+            instrument.oscillator = osc;
+            Command::Instrument(SetPatch(instrument))
+        };
+        vec![command]
+    };
+    use oscillator::Specs::*;
     match key {
-        Key::Tab | Key::Escape => {
-            control.mode = Mode::Playing;
-            vec![]
-        },
-        Key::D1 => vec![Command::Instrument(SetPatch(instrument::Specs::default()))], //TODO set specific oscillators
+        Key::Tab | Key::Escape => playing_mode(control),
+        Key::D1 => set(Sine),
+        Key::D2 => set(Saw),
+        Key::D3 => set(Square),
+        Key::D4 => set(Pulse(0.5)),
+        Key::D5 => set(Mix{ nvoices: 8, detune_amount: 3., specs: Box::new(Saw) }),
         _ => vec![],
     }
 }
 
 fn filter(key: Key, control: &mut Control) -> Vec<Command> {
     match key {
-        Key::Tab | Key::Escape => control.mode = Mode::Playing,
-        _ => (),
+        Key::Tab | Key::Escape => playing_mode(control),
+        _ => vec![],
     }
-    vec![]
 }
 
 fn adsr(key: Key, control: &mut Control) -> Vec<Command> {
     match key {
-        Key::Tab | Key::Escape => control.mode = Mode::Playing,
-        _ => (),
+        Key::Tab | Key::Escape => playing_mode(control),
+        _ => vec![],
     }
-    vec![]
 }
 
 fn lfo(key: Key, control: &mut Control) -> Vec<Command> {
     match key {
-        Key::Tab | Key::Escape => control.mode = Mode::Playing,
-        _ => (),
+        Key::Tab | Key::Escape => playing_mode(control),
+        _ => vec![],
     }
-    vec![]
 }
 
 fn arpeggiator(key: Key, control: &mut Control) -> Vec<Command> {
     match key {
-        Key::Tab | Key::Escape => control.mode = Mode::Playing,
-        _ => (),
+        Key::Tab | Key::Escape => playing_mode(control),
+        _ => vec![],
     }
+}
+
+fn playing_mode(control: &mut Control) -> Vec<Command> {
+    control.mode = Mode::Playing;
     vec![]
 }
