@@ -7,14 +7,17 @@ use rust_synth::core::synth::{filter, oscillator};
 use rust_synth::core::tools::{arpeggiator, transposer};
 use rust_synth::core::music_theory::pitch::Pitch;
 use rust_synth::core::music_theory::Hz;
+use crate::control::Mode;
 
 pub type Color = [f32; 4];
 const BLACK: Color = [0.0, 0.0, 0.0, 1.0];
 const WHITE: Color = [1.0, 1.0, 1.0, 1.0];
 
-pub fn draw(view: tools::View, window: &mut PistonWindow, glyphs: &mut Glyphs, e: &Event) {
+pub fn draw(view: tools::View, mode: Mode, window: &mut PistonWindow, glyphs: &mut Glyphs, e: &Event) {
     window.draw_2d(e, |c: Context, g: &mut G2d| {
         clear(BLACK, g);
+
+        draw_mode(mode, 10., 20., glyphs, c, g);
 
         draw_oscillator(view.synth.instrument.oscillator, 10., 60., glyphs, c, g);
         draw_filter(view.synth.instrument.filter, 10., 80., glyphs, c, g);
@@ -32,6 +35,10 @@ pub fn draw(view: tools::View, window: &mut PistonWindow, glyphs: &mut Glyphs, e
         draw_transposer(view.transposer, 10., 740., glyphs, c, g);
         draw_notes(view.synth.holding_notes, 10., 760., glyphs, c, g);
     });
+}
+
+pub fn draw_mode(mode: Mode, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Context, g: &mut G2d) {
+    draw_text(format!("{:?}", mode).as_str(), x, y, glyphs, c, g);
 }
 
 pub fn draw_oscillator(view: oscillator::View, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Context, g: &mut G2d) {

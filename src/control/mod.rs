@@ -5,16 +5,18 @@ use rust_synth::core::synth::instrument;
 mod playing;
 mod editing;
 
+#[derive(Copy, Clone, Debug)]
 pub enum EditTarget {
     Oscillator, Filter, Adsr, Lfo, Arpeggiator
 }
 
-enum Mode {
+#[derive(Copy, Clone, Debug)]
+pub enum Mode {
     Editing(Option<EditTarget>), Playing
 }
 
 pub struct Control {
-    mode: Mode,
+    pub mode: Mode,
     instrument: instrument::Specs,
 }
 

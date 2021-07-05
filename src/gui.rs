@@ -39,7 +39,7 @@ fn manual_loop(window: &mut PistonWindow, glyphs: &mut Glyphs, commands_out: Sen
             },
             Loop(Render(_)) => {
                 if let Ok(view) = view_in.try_recv() {
-                    rendering::draw(view, window, glyphs, &e)
+                    rendering::draw(view, control.mode, window, glyphs, &e)
                 }
             }
             _ => (),
