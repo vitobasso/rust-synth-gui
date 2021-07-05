@@ -1,12 +1,14 @@
-use piston_window::{Input, Input::Button, ButtonArgs, ButtonState::Release, Button::Keyboard, Key};
+use piston_window::{Input, Input::{Button, Move}, ButtonArgs, ButtonState::Release, Button::Keyboard,
+                    Key, Motion, Motion::MouseRelative};
 use crate::control::{Control, Mode, EditTarget};
 use rust_synth::core::control::synth::Command::SetPatch;
 use rust_synth::core::control::tools::Command;
 use rust_synth::core::synth::{oscillator, filter};
 
-pub fn handle_input(input: &Input, control: &mut Control) -> Vec<Command>{
+pub fn handle_input(input: &Input, window_size: [f64;2], control: &mut Control) -> Vec<Command>{
     match input {
         Button(args) => handle_button(args, control),
+        Move(motion) => handle_move(motion, control, window_size),
         _ => vec![],
     }
 }
@@ -15,6 +17,20 @@ fn handle_button(args: &ButtonArgs, control: &mut Control) -> Vec<Command> {
     match (args.state, args.button) {
         (Release, Keyboard(key)) => handle_key(key, control),
         _ => vec![],
+    }
+}
+
+fn handle_move(motion: &Motion, control: &mut Control, window_size: [f64;2]) -> Vec<Command> {
+    match motion {
+        MouseRelative(x, y) =>  {
+            let _norm_x = 4. * x / window_size[0];
+            let norm_y = 4. * y / window_size[1];
+            let previous = control.instrument.volume;
+            let new = (previous - norm_y).max(0.).min(1.);
+            control.instrument.volume = new;
+            update_specs(control)
+        },
+        _ => vec![]
     }
 }
 
@@ -48,8 +64,7 @@ fn oscillator(key: Key, control: &mut Control) -> Vec<Command> {
     let mut set = |specs: oscillator::Specs| {
         control.mode = Mode::Editing(None);
         control.instrument.oscillator = specs;
-        let command = Command::Instrument(SetPatch(control.instrument.clone()));
-        vec![command]
+        update_specs(control)
     };
     use oscillator::Specs::*;
     match key {
@@ -67,8 +82,7 @@ fn filter(key: Key, control: &mut Control) -> Vec<Command> {
     let mut set = |specs: filter::Specs| {
         control.mode = Mode::Editing(None);
         control.instrument.filter = specs;
-        let command = Command::Instrument(SetPatch(control.instrument.clone()));
-        vec![command]
+        update_specs(control)
     };
     use filter::Specs::*;
     match key {
@@ -105,4 +119,9 @@ fn arpeggiator(key: Key, control: &mut Control) -> Vec<Command> {
 fn playing_mode(control: &mut Control) -> Vec<Command> {
     control.mode = Mode::Playing;
     vec![]
+}
+
+fn update_specs(control: &mut Control) -> Vec<Command> {
+    let command = Command::Instrument(SetPatch(control.instrument.clone()));
+    vec![command]
 }

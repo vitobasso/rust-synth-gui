@@ -22,6 +22,9 @@ pub fn draw(view: tools::View, mode: Mode, window: &mut PistonWindow, glyphs: &m
         draw_oscillator(view.synth.instrument.oscillator, 10., 60., glyphs, c, g);
         draw_filter(view.synth.instrument.filter, 10., 80., glyphs, c, g);
 
+        draw_text("volume", 10., 100., glyphs, c, g);
+        draw_meter_vertical(view.synth.instrument.volume, 80., 100., c, g);
+
         if let Some(arp) = view.arpeggiator {
             draw_arpeggiator(arp, view.arp_index, 10., 160., glyphs, c, g);
         }

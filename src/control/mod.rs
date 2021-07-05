@@ -28,7 +28,7 @@ impl Control {
 
     pub fn handle_input(&mut self, input: &Input, window_size: [f64;2]) -> Vec<Command> {
         match self.mode {
-            Mode::Editing(_) => editing::handle_input(&input, self),
+            Mode::Editing(_) => editing::handle_input(&input, window_size, self),
             Mode::Playing => playing::handle_input(&input, window_size, self),
         }
     }
