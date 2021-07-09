@@ -35,6 +35,70 @@ fn handle_spacebar(state: ButtonState) -> Vec<Command> {
     }
 }
 
+fn handle_key(key: Key, control: &mut Control) -> Vec<Command> {
+    use EditTarget::*;
+    match control.mode {
+        Mode::Editing(None) => main_menu(key, control),
+        Mode::Editing(Some(Oscillator(_))) => oscillator(key, control),
+        Mode::Editing(Some(Filter)) => filter(key, control),
+        Mode::Editing(Some(Arpeggiator)) => arpeggiator(key, control),
+        _ => panic!(),
+    }
+}
+
+fn main_menu(key: Key, control: &mut Control) -> Vec<Command> {
+    match key {
+        Key::Tab | Key::Escape => control.mode = Mode::Playing,
+        Key::O => control.mode = Mode::Editing(Some(EditTarget::Oscillator(None))),
+        Key::F => control.mode = Mode::Editing(Some(EditTarget::Filter)),
+        Key::A => control.mode = Mode::Editing(Some(EditTarget::Arpeggiator)),
+        _ => (),
+    }
+    vec![]
+}
+
+fn oscillator(key: Key, control: &mut Control) -> Vec<Command> {
+    let mut set = |specs: oscillator::Specs, edit_target: Option<OscillatorTarget>| {
+        control.instrument.oscillator = specs;
+        control.mode =  Mode::Editing(Some(EditTarget::Oscillator(edit_target)));
+        update_specs(control)
+    };
+    use oscillator::{Specs::*, Basic::*};
+    match key {
+        Key::Tab | Key::Escape => playing_mode(control),
+        Key::D1 => set(Basic(Sine), None),
+        Key::D2 => set(Basic(Saw), None),
+        Key::D3 => set(Basic(Square), None),
+        Key::D4 => set(Pulse(0.5), Some(OscillatorTarget::Pulse)),
+        Key::D5 => set(Mix{ nvoices: 8, detune_amount: 3., specs: Saw }, Some(OscillatorTarget::Mix)),
+        _ => vec![],
+    }
+}
+
+fn filter(key: Key, control: &mut Control) -> Vec<Command> {
+    let mut set = |specs: filter::Specs| {
+        control.instrument.filter = specs;
+        control.mode = Mode::Editing(None);
+        update_specs(control)
+    };
+    use filter::Specs::*;
+    match key {
+        Key::Tab | Key::Escape => playing_mode(control),
+        Key::D1 => set(LPF),
+        Key::D2 => set(HPF),
+        Key::D3 => set(BPF),
+        Key::D4 => set(Notch),
+        _ => vec![],
+    }
+}
+
+fn arpeggiator(key: Key, control: &mut Control) -> Vec<Command> {
+    match key {
+        Key::Tab | Key::Escape => playing_mode(control),
+        _ => vec![],
+    }
+}
+
 fn handle_mouse(motion: &Motion, control: &mut Control, window_size: [f64;2]) -> Vec<Command> {
     match motion {
         MouseRelative(x, y) =>  handle_move(*x, *y, control, window_size),
@@ -85,70 +149,6 @@ fn change_usize(reference: &mut usize, normalized: f64, min: usize, max: usize) 
     let range = (max - min) as f64;
     let change = (normalized * range + min as f64).floor() as usize;
     *reference = (*reference + change).max(min).min(max);
-}
-
-fn handle_key(key: Key, control: &mut Control) -> Vec<Command> {
-    use EditTarget::*;
-    match control.mode {
-        Mode::Editing(None) => main_menu(key, control),
-        Mode::Editing(Some(Oscillator(_))) => oscillator(key, control),
-        Mode::Editing(Some(Filter)) => filter(key, control),
-        Mode::Editing(Some(Arpeggiator)) => arpeggiator(key, control),
-        _ => panic!(),
-    }
-}
-
-fn main_menu(key: Key, control: &mut Control) -> Vec<Command> {
-    match key {
-        Key::Tab | Key::Escape => control.mode = Mode::Playing,
-        Key::O => control.mode = Mode::Editing(Some(EditTarget::Oscillator(None))),
-        Key::F => control.mode = Mode::Editing(Some(EditTarget::Filter)),
-        Key::A => control.mode = Mode::Editing(Some(EditTarget::Arpeggiator)),
-        _ => (),
-    }
-    vec![]
-}
-
-fn oscillator(key: Key, control: &mut Control) -> Vec<Command> {
-    let mut set = |specs: oscillator::Specs, edit_target: Option<OscillatorTarget>| {
-        control.instrument.oscillator = specs;
-        control.mode =  Mode::Editing(Some(EditTarget::Oscillator(edit_target)));
-        update_specs(control)
-    };
-    use oscillator::{Specs::*, Basic::*};
-    match key {
-        Key::Tab | Key::Escape => playing_mode(control),
-        Key::D1 => set(Basic(Sine), None),
-        Key::D2 => set(Basic(Saw), None),
-        Key::D3 => set(Basic(Square), None),
-        Key::D4 => set(Pulse(0.5), Some(OscillatorTarget::Pulse)),
-        Key::D5 => set(Mix{ nvoices: 8, detune_amount: 3., specs: Saw }, Some(OscillatorTarget::Mix)),
-        _ => vec![],
-    }
-}
-
-fn filter(key: Key, control: &mut Control) -> Vec<Command> {
-    let mut set = |specs: filter::Specs| {
-        control.mode = Mode::Editing(None);
-        control.instrument.filter = specs;
-        update_specs(control)
-    };
-    use filter::Specs::*;
-    match key {
-        Key::Tab | Key::Escape => playing_mode(control),
-        Key::D1 => set(LPF),
-        Key::D2 => set(HPF),
-        Key::D3 => set(BPF),
-        Key::D4 => set(Notch),
-        _ => vec![],
-    }
-}
-
-fn arpeggiator(key: Key, control: &mut Control) -> Vec<Command> {
-    match key {
-        Key::Tab | Key::Escape => playing_mode(control),
-        _ => vec![],
-    }
 }
 
 fn playing_mode(control: &mut Control) -> Vec<Command> {
