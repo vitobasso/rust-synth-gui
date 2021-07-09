@@ -1,5 +1,4 @@
-use piston_window::{Input, Input::{Button, Move}, ButtonArgs, ButtonState::Release, Button::Keyboard,
-                    Key, Motion, Motion::MouseRelative};
+use piston_window::{Input, Input::{Button, Move}, ButtonArgs, ButtonState::*, Button::Keyboard, Key, Motion, Motion::MouseRelative, ButtonState};
 use crate::control::{Control, Mode, EditTarget, OscillatorTarget};
 use rust_synth::core::control::synth::Command::SetPatch;
 use rust_synth::core::control::tools::Command;
@@ -16,8 +15,23 @@ pub fn handle_input(input: &Input, window_size: [f64;2], control: &mut Control) 
 
 fn handle_button(args: &ButtonArgs, control: &mut Control) -> Vec<Command> {
     match (args.state, args.button) {
+        (_, Keyboard(Key::Space)) => handle_spacebar(args.state),
         (Release, Keyboard(key)) => handle_key(key, control),
         _ => vec![],
+    }
+}
+
+fn handle_spacebar(state: ButtonState) -> Vec<Command> {
+    use rust_synth::core::{
+        control::synth::{Command::{NoteOn, NoteOff}, id_discr},
+        control::tools::Command::Instrument,
+        music_theory::pitch::Pitch,
+    };
+    let pitch = Pitch::default();
+    let id = id_discr(pitch, 0);
+    match state {
+        Press => vec![Instrument(NoteOn(pitch, 1., id))],
+        Release => vec![Instrument(NoteOff(id))],
     }
 }
 
