@@ -6,11 +6,6 @@ mod playing;
 mod editing;
 
 #[derive(Copy, Clone, Debug)]
-pub enum EditTarget {
-    Oscillator, Filter, Adsr, Lfo, Arpeggiator
-}
-
-#[derive(Copy, Clone, Debug)]
 pub enum Mode {
     Editing(Option<EditTarget>), Playing
 }
@@ -35,3 +30,14 @@ impl Control {
 
 }
 
+#[derive(Copy, Clone, Debug)]
+pub enum EditTarget {
+    Oscillator(Option<OscillatorTarget>),
+    Filter,
+    Arpeggiator,
+}
+
+#[derive(Copy, Clone, Debug)]
+pub enum OscillatorTarget {
+    Pulse, Mix
+}
