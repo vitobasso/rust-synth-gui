@@ -78,7 +78,6 @@ fn oscillator(key: Key, control: &mut Control) -> Vec<Command> {
 fn filter(key: Key, control: &mut Control) -> Vec<Command> {
     let mut set = |specs: filter::Specs| {
         control.instrument.filter = specs;
-        control.mode = Mode::Editing(None);
         update_specs(control)
     };
     use filter::Specs::*;
@@ -109,26 +108,22 @@ fn handle_mouse(motion: &Motion, control: &mut Control, window_size: [f64;2]) ->
 
 fn handle_move(x: f64, y: f64, control: &mut Control, window_size: [f64;2]) {
     let [norm_x, norm_y] = normalized_mouse(x, y, window_size);
-    let osc = &mut control.instrument.oscillator;
     use {EditTarget::*, OscillatorTarget::*};
     match control.mode {
-        Mode::Editing(Some(Oscillator(Some(Pulse)))) => {
-            match osc {
+        Mode::Editing(Some(Oscillator(Some(Pulse)))) =>
+            match &mut control.instrument.oscillator {
                 Specs::Pulse(cycle) =>
                     change_f64(cycle, norm_x, 0., 1.),
                 _ => {}
-            }
-        },
-        Mode::Editing(Some(Oscillator(Some(Mix)))) => {
-            match osc {
+            },
+        Mode::Editing(Some(Oscillator(Some(Mix)))) =>
+            match &mut control.instrument.oscillator {
                 Specs::Mix { nvoices: n, detune_amount: d, .. } => {
-                    change_usize(n, norm_y, 1, 20);
-                    change_f64(d, norm_x, 0.001, 2.)
+                    change_usize(n, norm_y, 1, 40);
+                    change_f64(d, norm_x, 0.001, 4.)
                 },
                 _ => {}
-            }
-        },
-        Mode::Playing => (),
+            },
         _ => (),
     }
 }
@@ -141,14 +136,14 @@ fn normalized_mouse(x: f64, y: f64, window_size: [f64;2]) -> [f64; 2] {
 
 fn change_f64(reference: &mut f64, normalized: f64, min: f64, max: f64) {
     let range = max - min;
-    let change = normalized * range + min;
+    let change = normalized * range;
     *reference = (*reference + change).max(min).min(max);
 }
 
 fn change_usize(reference: &mut usize, normalized: f64, min: usize, max: usize) {
     let range = (max - min) as f64;
-    let change = (normalized * range + min as f64).floor() as usize;
-    *reference = (*reference + change).max(min).min(max);
+    let change = (normalized * range as f64).floor() as isize;
+    *reference = ((*reference as isize + change).max(0) as usize).max(min).min(max);
 }
 
 fn playing_mode(control: &mut Control) -> Vec<Command> {
