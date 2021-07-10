@@ -2,9 +2,10 @@ use piston_window::{Input, Input::{Button, Move}, ButtonArgs, ButtonState::*, Bu
                     Motion, Motion::MouseCursor, ButtonState};
 use crate::control::{Control, Mode, EditTarget, OscillatorTarget};
 use rust_synth::core::control::synth::Command::SetPatch;
-use rust_synth::core::control::tools::Command;
+use rust_synth::core::control::tools::{Command, Patch};
 use rust_synth::core::synth::{oscillator, filter};
 use rust_synth::core::synth::oscillator::Specs;
+use rust_synth::core::tools::arpeggiator;
 
 pub fn handle_input(input: &Input, window_size: [f64;2], control: &mut Control) -> Vec<Command>{
     match input {
@@ -93,8 +94,37 @@ fn filter(key: Key, control: &mut Control) -> Vec<Command> {
 }
 
 fn arpeggiator(key: Key, control: &mut Control) -> Vec<Command> {
+    use arpeggiator::phrase::{Chord, Direction};
+    use rust_synth::core::music_theory::diatonic_scale::{self, OctaveShift::{Down1, Up1}};
+
+    let mut set = |chord: Chord, direction: Direction| {
+        let old = control.arpeggiator.clone().unwrap_or_else(|| arpeggiator::Specs::default());
+        let specs = arpeggiator::Specs {
+            key: diatonic_scale::Key::C,
+            phrase: arpeggiator::phrase::Specs {
+                chord, direction, octave_min: Down1, octave_max: Up1, ..old.phrase
+            },
+            .. old
+        };
+        control.arpeggiator = Some(specs);
+        update_specs(control)
+    };
+
     match key {
         Key::Tab | Key::Escape => playing_mode(control),
+        Key::D1 => set(Chord::Octaves, Direction::Up),
+        Key::D2 => set(Chord::Octaves, Direction::Down),
+        Key::D3 => set(Chord::Octaves, Direction::UpDown),
+        Key::D4 => set(Chord::Triad, Direction::Up),
+        Key::D5 => set(Chord::Triad, Direction::Down),
+        Key::D6 => set(Chord::Triad, Direction::UpDown),
+        Key::D7 => set(Chord::Fantasy, Direction::UpDown),
+        Key::D8 => set(Chord::Tetra, Direction::Up),
+        Key::D9 => set(Chord::Penta, Direction::Up),
+        Key::D0 => {
+            control.arpeggiator = None;
+            update_specs(control)
+        },
         _ => vec![],
     }
 }
@@ -157,6 +187,6 @@ fn playing_mode(control: &mut Control) -> Vec<Command> {
 }
 
 fn update_specs(control: &Control) -> Vec<Command> {
-    let command = Command::Instrument(SetPatch(control.instrument.clone()));
-    vec![command]
+    vec![Command::Instrument(SetPatch(control.instrument.clone())),
+         Command::SetPatch(Patch::Arpeggiator(control.arpeggiator.clone()))]
 }
