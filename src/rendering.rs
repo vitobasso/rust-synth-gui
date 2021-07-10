@@ -58,7 +58,7 @@ pub fn draw_oscillator(view: oscillator::View, x: Scalar, y: Scalar, glyphs: &mu
             draw_text("mix", x, y, glyphs, c, g);
             let spread: Vec<Hz> = voices.iter().map(|v| v.tuning).collect();
             for v in spread {
-                draw_meter_horizontal(v, x + 100., y, c, g);
+                draw_meter_horizontal(v / 4., x + 150., y, c, g);
             }
         }
     }

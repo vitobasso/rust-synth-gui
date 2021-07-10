@@ -1,4 +1,5 @@
-use piston_window::{Input, Input::{Button, Move}, ButtonArgs, ButtonState::*, Button::Keyboard, Key, Motion, Motion::MouseRelative, ButtonState};
+use piston_window::{Input, Input::{Button, Move}, ButtonArgs, ButtonState::*, Button::Keyboard, Key,
+                    Motion, Motion::MouseCursor, ButtonState};
 use crate::control::{Control, Mode, EditTarget, OscillatorTarget};
 use rust_synth::core::control::synth::Command::SetPatch;
 use rust_synth::core::control::tools::Command;
@@ -76,11 +77,11 @@ fn oscillator(key: Key, control: &mut Control) -> Vec<Command> {
 }
 
 fn filter(key: Key, control: &mut Control) -> Vec<Command> {
-    let mut set = |specs: filter::Specs| {
-        control.instrument.filter = specs;
+    let mut set = |spec: filter::TypeSpec| {
+        control.instrument.filter = filter::Specs{ filter_type: spec, .. Default::default() };
         update_specs(control)
     };
-    use filter::Specs::*;
+    use filter::TypeSpec::*;
     match key {
         Key::Tab | Key::Escape => playing_mode(control),
         Key::D1 => set(LPF),
@@ -100,7 +101,7 @@ fn arpeggiator(key: Key, control: &mut Control) -> Vec<Command> {
 
 fn handle_mouse(motion: &Motion, control: &mut Control, window_size: [f64;2]) -> Vec<Command> {
     match motion {
-        MouseRelative(x, y) =>  handle_move(*x, *y, control, window_size),
+        MouseCursor(x, y) =>  handle_move(*x, *y, control, window_size),
         _ => ()
     }
     update_specs(control)
@@ -120,30 +121,34 @@ fn handle_move(x: f64, y: f64, control: &mut Control, window_size: [f64;2]) {
             match &mut control.instrument.oscillator {
                 Specs::Mix { nvoices: n, detune_amount: d, .. } => {
                     change_usize(n, norm_y, 1, 40);
-                    change_f64(d, norm_x, 0.001, 4.)
+                    change_f64(d, norm_x, 0.001, 32.);
                 },
                 _ => {}
             },
+        Mode::Editing(Some(Filter)) => {
+            change_f64(&mut control.instrument.filter.cutoff, norm_y, 0., 1.);
+            change_f64(&mut control.instrument.filter.resonance, norm_x, 0., 1.);
+        },
         _ => (),
     }
 }
 
 fn normalized_mouse(x: f64, y: f64, window_size: [f64;2]) -> [f64; 2] {
-    let normalized_x = 4. * x / window_size[0];
-    let normalized_y = -4. * y / window_size[1];
-    [normalized_x, normalized_y]
+    let normalized_x = x / window_size[0];
+    let normalized_y = 1. - (y / window_size[1]);
+    [normalized_x.min(1.).max(0.),
+        normalized_y.min(1.).max(0.)]
 }
 
 fn change_f64(reference: &mut f64, normalized: f64, min: f64, max: f64) {
-    let range = max - min;
-    let change = normalized * range;
-    *reference = (*reference + change).max(min).min(max);
+    let scaled = normalized * (max - min) + min;
+    *reference = scaled;
 }
 
 fn change_usize(reference: &mut usize, normalized: f64, min: usize, max: usize) {
     let range = (max - min) as f64;
-    let change = (normalized * range as f64).floor() as isize;
-    *reference = ((*reference as isize + change).max(0) as usize).max(min).min(max);
+    let scaled = (normalized * range).floor() as usize + min;
+    *reference = scaled;
 }
 
 fn playing_mode(control: &mut Control) -> Vec<Command> {
