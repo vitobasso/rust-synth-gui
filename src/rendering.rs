@@ -5,9 +5,9 @@ use rust_synth::core::control::tools;
 use rust_synth::core::control::synth::Id;
 use rust_synth::core::synth::{filter, oscillator};
 use rust_synth::core::tools::{arpeggiator, transposer};
-use rust_synth::core::music_theory::pitch::Pitch;
-use rust_synth::core::music_theory::Hz;
+use rust_synth::core::music_theory::{Hz, pitch::Pitch, diatonic_scale};
 use crate::control::Mode;
+use rust_synth::core::music_theory::rhythm::Note;
 
 pub type Color = [f32; 4];
 const BLACK: Color = [0.0, 0.0, 0.0, 1.0];
@@ -30,10 +30,10 @@ pub fn draw(view: tools::View, mode: Mode, window: &mut PistonWindow, glyphs: &m
         }
 
         let pulse = format!("pulse: {}", view.pulse.period.as_millis().to_string());
-        draw_text(pulse.as_str(), 10., 220., glyphs, c, g);
+        draw_text(pulse.as_str(), 10., 280., glyphs, c, g);
 
         let loops = format!("{:?}", view.loops);
-        draw_text(loops.as_str(), 10., 240., glyphs, c, g);
+        draw_text(loops.as_str(), 10., 300., glyphs, c, g);
 
         draw_transposer(view.transposer, 10., 740., glyphs, c, g);
         draw_notes(view.synth.holding_notes, 10., 760., glyphs, c, g);
@@ -73,15 +73,25 @@ pub fn draw_filter(view: filter::View, x: Scalar, y: Scalar, glyphs: &mut Glyphs
 }
 
 fn draw_arpeggiator(view: arpeggiator::View, index: f64, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Context, g: &mut G2d) {
-    //arp.phrase.
     draw_text("arpeggiator:", x, y, glyphs, c, g);
-    draw_meter_horizontal(index, x + 140., y, c, g);
+    if let Some(holding) = view.holding_pitch {
+        draw_text(format!("holding: {}", holding).as_str(), x, y + 20., glyphs, c, g);
+    }
+    if let Some(playing) = view.playing_pitch {
+        draw_text(format!("playing: {}", playing).as_str(), x, y + 40., glyphs, c, g);
+    }
 
-    let holding = view.holding_pitch.map(|p| format!("holding: {}", p));
-    let playing = view.playing_pitch.map(|p| format!("playing: {}", p));
-    if let (Some(holding), Some(playing)) = (holding, playing) {
-        let notes = format!("{}, {}", holding, playing);
-        draw_text(notes.as_str(), x, y + 20., glyphs, c, g);
+    draw_phrase(view.phrase, x + 200., y + 40., c, g);
+    draw_meter_horizontal(index * 18., x + 200., y, c, g);
+}
+
+fn draw_phrase(phrase: Vec<Note>, x: Scalar, y: Scalar, c: Context, g: &mut G2d) {
+    let mut offset = 0.;
+    for note in phrase {
+        let width = note.duration as u8 as f64 * 4.;
+        let degree = diatonic_scale::degree_from(note.pitch) as f64;
+        draw_rectangle(width, 4., x + offset, y - degree * 4., c, g);
+        offset += width;
     }
 }
 
@@ -114,5 +124,11 @@ pub fn draw_meter_vertical(value: f64, x: Scalar, y: Scalar, c: Context, g: &mut
 pub fn draw_meter_horizontal(value: f64, x: Scalar, y: Scalar, c: Context, g: &mut G2d) {
     let c2 = c.trans(x, y);
     let rect = [value * 14., -10., 4., 10.];
+    rectangle(WHITE, rect, c2.transform, g);
+}
+
+pub fn draw_rectangle(width: Scalar, height: Scalar, x: Scalar, y: Scalar, c: Context, g: &mut G2d) {
+    let c2 = c.trans(x, y);
+    let rect = [0., 0., width, height];
     rectangle(WHITE, rect, c2.transform, g);
 }
