@@ -67,13 +67,12 @@ fn oscillator(key: Key, control: &mut Control) -> Vec<Command> {
     };
     use oscillator::{Specs::*, Basic::*};
     match key {
-        Key::Tab | Key::Escape => playing_mode(control),
         Key::D1 => set(Basic(Sine), None),
         Key::D2 => set(Basic(Saw), None),
         Key::D3 => set(Basic(Square), None),
         Key::D4 => set(Pulse(0.5), Some(OscillatorTarget::Pulse)),
         Key::D5 => set(Mix{ nvoices: 8, detune_amount: 3., specs: Saw }, Some(OscillatorTarget::Mix)),
-        _ => vec![],
+        _ => main_menu(key,control),
     }
 }
 
@@ -84,12 +83,11 @@ fn filter(key: Key, control: &mut Control) -> Vec<Command> {
     };
     use filter::TypeSpec::*;
     match key {
-        Key::Tab | Key::Escape => playing_mode(control),
         Key::D1 => set(LPF),
         Key::D2 => set(HPF),
         Key::D3 => set(BPF),
         Key::D4 => set(Notch),
-        _ => vec![],
+        _ => main_menu(key,control),
     }
 }
 
@@ -111,7 +109,6 @@ fn arpeggiator(key: Key, control: &mut Control) -> Vec<Command> {
     };
 
     match key {
-        Key::Tab | Key::Escape => playing_mode(control),
         Key::D1 => set(Chord::Octaves, Direction::Up),
         Key::D2 => set(Chord::Octaves, Direction::Down),
         Key::D3 => set(Chord::Octaves, Direction::UpDown),
@@ -125,7 +122,7 @@ fn arpeggiator(key: Key, control: &mut Control) -> Vec<Command> {
             control.arpeggiator = None;
             update_specs(control)
         },
-        _ => vec![],
+        _ => main_menu(key,control),
     }
 }
 
@@ -179,11 +176,6 @@ fn change_usize(reference: &mut usize, normalized: f64, min: usize, max: usize) 
     let range = (max - min) as f64;
     let scaled = (normalized * range).floor() as usize + min;
     *reference = scaled;
-}
-
-fn playing_mode(control: &mut Control) -> Vec<Command> {
-    control.mode = Mode::Playing;
-    vec![]
 }
 
 fn update_specs(control: &Control) -> Vec<Command> {
