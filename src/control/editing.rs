@@ -116,6 +116,8 @@ fn arpeggiator(key: Key, control: &mut Control) -> Vec<Command> {
         Key::F1 => set(|old| Specs { direction: Direction::Up, ..old }),
         Key::F2 => set(|old| Specs { direction: Direction::Down, ..old }),
         Key::F3 => set(|old| Specs { direction: Direction::UpDown, ..old }),
+        Key::Minus => set(|old| old.duration.half().map_or(old.clone(), |duration| Specs { duration, ..old })),
+        Key::Equals => set(|old| old.duration.double().map_or(old.clone(), |duration| Specs { duration, ..old })),
         Key::D0 => {
             control.arpeggiator = None;
             update_specs(control)
