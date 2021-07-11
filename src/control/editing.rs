@@ -6,6 +6,7 @@ use rust_synth::core::control::tools::{Command, Patch};
 use rust_synth::core::synth::{oscillator, filter};
 use rust_synth::core::synth::oscillator::Specs;
 use rust_synth::core::tools::arpeggiator;
+use rust_synth::core::music_theory::diatonic_scale::OctaveShift;
 
 pub fn handle_input(input: &Input, window_size: [f64;2], control: &mut Control) -> Vec<Command>{
     match input {
@@ -93,31 +94,28 @@ fn filter(key: Key, control: &mut Control) -> Vec<Command> {
 
 fn arpeggiator(key: Key, control: &mut Control) -> Vec<Command> {
     use arpeggiator::builder::{Chord, Direction};
-    use rust_synth::core::music_theory::diatonic_scale::{self, OctaveShift::{Down1, Up1}};
+    use rust_synth::core::music_theory::diatonic_scale;
+    use arpeggiator::builder::Specs;
 
-    let mut set = |chord: Chord, direction: Direction| {
-        let old = control.arpeggiator.clone().unwrap_or_else(|| arpeggiator::Specs::default());
+    let mut set = |f: fn(Specs) -> Specs| {
+        let old = control.arpeggiator.as_ref().map(|a| a.phrase.clone()).unwrap_or_else(|| Specs::default());
         let specs = arpeggiator::Specs {
             key: diatonic_scale::Key::C,
-            phrase: arpeggiator::builder::Specs {
-                chord, direction, octave_min: Down1, octave_max: Up1, ..old.phrase
-            },
-            .. old
+            phrase: f(old),
         };
         control.arpeggiator = Some(specs);
         update_specs(control)
     };
 
     match key {
-        Key::D1 => set(Chord::Octaves, Direction::Up),
-        Key::D2 => set(Chord::Octaves, Direction::Down),
-        Key::D3 => set(Chord::Octaves, Direction::UpDown),
-        Key::D4 => set(Chord::Triad, Direction::Up),
-        Key::D5 => set(Chord::Triad, Direction::Down),
-        Key::D6 => set(Chord::Triad, Direction::UpDown),
-        Key::D7 => set(Chord::Fantasy, Direction::UpDown),
-        Key::D8 => set(Chord::Tetra, Direction::Up),
-        Key::D9 => set(Chord::Penta, Direction::Up),
+        Key::D1 => set(|old| Specs { chord: Chord::Octaves, ..old }),
+        Key::D2 => set(|old| Specs { chord: Chord::Triad, ..old }),
+        Key::D3 => set(|old| Specs { chord: Chord::Fantasy, ..old }),
+        Key::D4 => set(|old| Specs { chord: Chord::Tetra, ..old }),
+        Key::D5 => set(|old| Specs { chord: Chord::Penta, ..old }),
+        Key::F1 => set(|old| Specs { direction: Direction::Up, ..old }),
+        Key::F2 => set(|old| Specs { direction: Direction::Down, ..old }),
+        Key::F3 => set(|old| Specs { direction: Direction::UpDown, ..old }),
         Key::D0 => {
             control.arpeggiator = None;
             update_specs(control)
@@ -156,6 +154,17 @@ fn handle_move(x: f64, y: f64, control: &mut Control, window_size: [f64;2]) {
             change_f64(&mut control.instrument.filter.cutoff, norm_y, 0., 1.);
             change_f64(&mut control.instrument.filter.resonance, norm_x, 0., 1.);
         },
+        Mode::Editing(Some(Arpeggiator)) => {
+            use arpeggiator::builder::Specs;
+            match &mut control.arpeggiator {
+                Some(arp) => {
+                    let old = &arp.phrase;
+                    let (octave_min, octave_max) = octaves_from_mouse(norm_x, norm_y);
+                    arp.phrase = Specs { octave_min, octave_max, ..old.clone() };
+                }
+                _ => {}
+            }
+        },
         _ => (),
     }
 }
@@ -176,6 +185,20 @@ fn change_usize(reference: &mut usize, normalized: f64, min: usize, max: usize) 
     let range = (max - min) as f64;
     let scaled = (normalized * range).floor() as usize + min;
     *reference = scaled;
+}
+
+fn octaves_from_mouse(x: f64, y: f64) -> (OctaveShift, OctaveShift) {
+    let max_range = OctaveShift::Up3 as i8 - OctaveShift::Down3 as i8;
+    let range = (x * max_range as f64).floor() as i8;
+    let min_offset = OctaveShift::Down3 as i8;
+    let max_offset = OctaveShift::Up3 as i8;
+    let offset = (y * max_range as f64 + min_offset as f64).floor() as i8;
+    let bottom_octave = OctaveShift::from_i8(offset)
+        .unwrap_or_else(|| panic!("Can't get OctaveShift from {}", offset));
+    let top_octave_i8 = (offset + range).min(max_offset);
+    let top_octave = OctaveShift::from_i8(top_octave_i8)
+        .unwrap_or_else(|| panic!("Can't get OctaveShift from {}", top_octave_i8));
+    (bottom_octave, top_octave)
 }
 
 fn update_specs(control: &Control) -> Vec<Command> {
