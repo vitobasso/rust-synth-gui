@@ -94,14 +94,14 @@ fn filter(key: Key, control: &mut Control) -> Vec<Command> {
 }
 
 fn arpeggiator(key: Key, control: &mut Control) -> Vec<Command> {
-    use arpeggiator::phrase::{Chord, Direction};
+    use arpeggiator::builder::{Chord, Direction};
     use rust_synth::core::music_theory::diatonic_scale::{self, OctaveShift::{Down1, Up1}};
 
     let mut set = |chord: Chord, direction: Direction| {
         let old = control.arpeggiator.clone().unwrap_or_else(|| arpeggiator::Specs::default());
         let specs = arpeggiator::Specs {
             key: diatonic_scale::Key::C,
-            phrase: arpeggiator::phrase::Specs {
+            phrase: arpeggiator::builder::Specs {
                 chord, direction, octave_min: Down1, octave_max: Up1, ..old.phrase
             },
             .. old
