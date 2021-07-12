@@ -81,8 +81,9 @@ fn draw_arpeggiator(view: arpeggiator::View, index: f64, x: Scalar, y: Scalar, g
         draw_text(format!("playing: {}", playing).as_str(), x, y + 40., glyphs, c, g);
     }
 
-    draw_phrase(view.phrase, x + 200., y + 40., c, g);
-    draw_meter_horizontal(index * 18., x + 200., y, c, g);
+    draw_phrase(view.phrase.notes, x + 200., y + 40., c, g);
+    let cycled_index = index % view.phrase.length;
+    draw_meter_horizontal(cycled_index * 4.5, x + 200., y, c, g);
 }
 
 fn draw_phrase(phrase: Vec<Note>, x: Scalar, y: Scalar, c: Context, g: &mut G2d) {
