@@ -61,21 +61,35 @@ fn main_menu(key: Key, control: &mut Control) -> Vec<Command> {
 }
 
 fn oscillator(key: Key, control: &mut Control) -> Vec<Command> {
-    let mut set = |specs: oscillator::Specs, edit_target: Option<OscillatorTarget>| {
-        control.instrument.oscillator = specs;
+    let mut set = |f: fn(&oscillator::Specs) -> oscillator::Specs, edit_target: Option<OscillatorTarget>| {
+        control.instrument.oscillator = f(&control.instrument.oscillator);
         control.mode =  Mode::Editing(Some(EditTarget::Oscillator(edit_target)));
         update_specs(control)
     };
+
+    fn next_mix(old: &oscillator::Specs) -> oscillator::Specs {
+        use oscillator::{Specs::*, Basic::*};
+        match *old {
+            Mix { n_voices, detune_amount, specs, random_seed, .. } =>
+                Mix { n_voices, detune_amount, specs, random_seed: random_seed + 1 },
+            _ => Mix{ n_voices: 8, detune_amount: 3., specs: Saw, random_seed: 0 },
+        }
+    }
+
     use oscillator::{Specs::*, Basic::*};
     match key {
-        Key::D1 => set(Basic(Sine), None),
-        Key::D2 => set(Basic(Saw), None),
-        Key::D3 => set(Basic(Square), None),
-        Key::D4 => set(Pulse(0.5), Some(OscillatorTarget::Pulse)),
-        Key::D5 => set(Mix{ nvoices: 8, detune_amount: 3., specs: Saw }, Some(OscillatorTarget::Mix)),
+        Key::D1 => set(|_| Basic(Sine), None),
+        Key::D2 => set(|_| Basic(Saw), None),
+        Key::D3 => set(|_| Basic(Square), None),
+        Key::D4 => set(|_| Pulse(0.5), Some(OscillatorTarget::Pulse)),
+        Key::D5 => {
+            set(|o| next_mix(o), Some(OscillatorTarget::Mix))
+        },
         _ => main_menu(key,control),
     }
 }
+
+
 
 fn filter(key: Key, control: &mut Control) -> Vec<Command> {
     let mut set = |spec: filter::TypeSpec| {
@@ -146,9 +160,9 @@ fn handle_move(x: f64, y: f64, control: &mut Control, window_size: [f64;2]) {
             },
         Mode::Editing(Some(Oscillator(Some(Mix)))) =>
             match &mut control.instrument.oscillator {
-                Specs::Mix { nvoices: n, detune_amount: d, .. } => {
-                    change_usize(n, norm_y, 1, 40);
-                    change_f64(d, norm_x, 0.001, 32.);
+                Specs::Mix { n_voices, detune_amount, .. } => {
+                    change_usize(n_voices, norm_y, 1, 40);
+                    change_f64(detune_amount, norm_x, 0.001, 32.);
                 },
                 _ => {}
             },
