@@ -4,10 +4,9 @@ use piston_window::math::Scalar;
 use rust_synth::core::control::tools;
 use rust_synth::core::control::synth::Id;
 use rust_synth::core::synth::{filter, oscillator};
-use rust_synth::core::tools::{arpeggiator, transposer};
-use rust_synth::core::music_theory::{Hz, pitch::Pitch, diatonic_scale};
+use rust_synth::core::tools::{arpeggiator, transposer, loops, pulse};
+use rust_synth::core::music_theory::{Hz, pitch::Pitch, diatonic_scale, rhythm::Note};
 use crate::control::Mode;
-use rust_synth::core::music_theory::rhythm::Note;
 
 pub type Color = [f32; 4];
 const BLACK: Color = [0.0, 0.0, 0.0, 1.0];
@@ -19,22 +18,16 @@ pub fn draw(view: tools::View, mode: Mode, window: &mut PistonWindow, glyphs: &m
 
         draw_mode(mode, 10., 20., glyphs, c, g);
 
+        draw_volume(view.synth.instrument.volume, 670., 60., glyphs, c, g);
         draw_oscillator(view.synth.instrument.oscillator, 10., 60., glyphs, c, g);
         draw_filter(view.synth.instrument.filter, 10., 80., glyphs, c, g);
-
-        draw_text("volume", 10., 100., glyphs, c, g);
-        draw_meter_vertical(view.synth.instrument.volume, 80., 100., c, g);
 
         if let Some(arp) = view.arpeggiator {
             draw_arpeggiator(arp, view.arp_index, 10., 160., glyphs, c, g);
         }
 
-        let pulse = format!("pulse: {}", view.pulse.period.as_millis().to_string());
-        draw_text(pulse.as_str(), 10., 280., glyphs, c, g);
-
-        let loops = format!("{:?}", view.loops);
-        draw_text(loops.as_str(), 10., 300., glyphs, c, g);
-
+        draw_pulse(view.pulse, 680., 700., glyphs, c, g);
+        draw_loops(view.loops, 10., 700., glyphs, c, g);
         draw_transposer(view.transposer, 10., 740., glyphs, c, g);
         draw_notes(view.synth.holding_notes, 10., 760., glyphs, c, g);
     });
@@ -72,6 +65,11 @@ pub fn draw_filter(view: filter::View, x: Scalar, y: Scalar, glyphs: &mut Glyphs
     draw_meter_vertical(view.resonance, x + 300., y, c, g);
 }
 
+pub fn draw_volume(view: f64, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Context, g: &mut G2d) {
+    draw_text("volume:", x, y, glyphs, c, g);
+    draw_meter_vertical(view, x+ 80., y, c, g);
+}
+
 fn draw_arpeggiator(view: arpeggiator::View, index: f64, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Context, g: &mut G2d) {
     draw_text("arpeggiator:", x, y, glyphs, c, g);
     if let Some(holding) = view.holding_pitch {
@@ -93,6 +91,29 @@ fn draw_phrase(phrase: Vec<Note>, x: Scalar, y: Scalar, c: Context, g: &mut G2d)
         let degree = diatonic_scale::degree_from(note.pitch) as f64;
         draw_rectangle(width, 4., x + offset, y - degree * 4., c, g);
         offset += width;
+    }
+}
+
+fn draw_pulse(view: pulse::View, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Context, g: &mut G2d) {
+    let pulse = format!("tempo: {}", view.period.as_millis().to_string());
+    draw_text(pulse.as_str(), x, y, glyphs, c, g);
+}
+
+fn draw_loops(view: loops::View, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Context, g: &mut G2d) {
+    draw_text("loops:", x, y, glyphs, c, g);
+    let loops: Vec<usize> = vec![0, 1, 2, 3, 4];
+    let mut offset = 70.;
+    for index in loops {
+        draw_text(format!("{}", index + 1).as_str(), x + offset, y, glyphs, c, g);
+        if let Some(true) = view.playing_loops.get(&index) {
+            draw_text(".", x + offset + 8., y, glyphs, c, g);
+        }
+        if let Some(recording) = view.recording_loop {
+            if recording == index {
+                draw_text("*", x + offset + 8., y, glyphs, c, g);
+            }
+        }
+        offset += 20.;
     }
 }
 
