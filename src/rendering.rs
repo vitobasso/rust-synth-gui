@@ -3,7 +3,7 @@ use piston_window::{PistonWindow, Event, Context, G2d, clear, text, rectangle, G
 use piston_window::math::Scalar;
 use rust_synth::core::control::tools;
 use rust_synth::core::control::synth::Id;
-use rust_synth::core::synth::{filter, oscillator};
+use rust_synth::core::synth::{filter, oscillator, lfo};
 use rust_synth::core::tools::{arpeggiator, transposer, loops, pulse};
 use rust_synth::core::music_theory::{Hz, pitch::Pitch, diatonic_scale, rhythm::Note};
 use crate::control::{Mode, EditTarget, OscillatorTarget};
@@ -21,6 +21,10 @@ pub fn draw(view: tools::View, mode: Mode, window: &mut PistonWindow, glyphs: &m
         draw_volume(view.synth.instrument.volume, 670., 120., glyphs, c, g);
         draw_oscillator(view.synth.instrument.oscillator, 10., 120., glyphs, c, g);
         draw_filter(view.synth.instrument.filter, 10., 140., glyphs, c, g);
+
+        if let Some(lfo) = view.synth.instrument.lfo {
+            draw_lfo(lfo, 10., 160., glyphs, c, g);
+        }
 
         if let Some(arp) = view.arpeggiator {
             draw_arpeggiator(arp, view.arp_index, 10., 200., glyphs, c, g);
@@ -53,6 +57,11 @@ pub fn draw_mode(mode: Mode, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Conte
     draw_text(text, x, y, glyphs, c, g);
 }
 
+pub fn draw_volume(view: f64, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Context, g: &mut G2d) {
+    draw_text("volume:", x, y, glyphs, c, g);
+    draw_meter_vertical(view, x+ 80., y, c, g);
+}
+
 pub fn draw_oscillator(view: oscillator::View, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Context, g: &mut G2d) {
     use oscillator::View::*;
     match view {
@@ -81,9 +90,11 @@ pub fn draw_filter(view: filter::View, x: Scalar, y: Scalar, glyphs: &mut Glyphs
     draw_meter_vertical(view.resonance, x + 300., y, c, g);
 }
 
-pub fn draw_volume(view: f64, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Context, g: &mut G2d) {
-    draw_text("volume:", x, y, glyphs, c, g);
-    draw_meter_vertical(view, x+ 80., y, c, g);
+pub fn draw_lfo(view: lfo::View, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Context, g: &mut G2d) {
+    draw_text(format!("{:?}", view.target).as_str(), x, y, glyphs, c, g);
+    draw_meter_vertical(view.amount, x + 60., y, c, g);
+    draw_meter_vertical(view.freq, x + 80., y, c, g);
+    draw_oscillator(view.oscillator, x + 100., y, glyphs, c, g);
 }
 
 fn draw_arpeggiator(view: arpeggiator::View, index: f64, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Context, g: &mut G2d) {
