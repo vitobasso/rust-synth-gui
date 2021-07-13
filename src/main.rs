@@ -1,8 +1,10 @@
 use std::env::{args, Args};
+
 use rust_synth::io;
 
 mod gui;
-mod keymap;
+mod control;
+mod rendering;
 
 fn main() {
     match midi_file_argument() {
@@ -11,8 +13,8 @@ fn main() {
             gui::start(None);
         },
         None => {
-            let commands_out = io::start_manual();
-            gui::start(Some(commands_out));
+            let channels = io::start_manual();
+            gui::start(Some(channels));
         },
     }
 }

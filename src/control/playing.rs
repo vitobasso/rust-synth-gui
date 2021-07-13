@@ -4,26 +4,27 @@ use rust_synth::core::{
     tools::{transposer::Command::*, loops::Command::*},
     music_theory::{pitch::Pitch, pitch_class::PitchClass::*},
 };
+use crate::control::{Control, Mode};
 
-pub fn handle_input(input: &Input, window_size: [f64;2]) -> Vec<Command> {
+pub fn handle_input(input: &Input, window_size: [f64;2], control: &mut Control) -> Vec<Command> {
     match input {
-        Button(args) => handle_button(args),
+        Button(args) => handle_button(args, control),
         Move(args) => handle_move(args, window_size),
         _ => vec![],
     }
 }
 
-fn handle_button(args: &ButtonArgs) -> Vec<Command> {
+fn handle_button(args: &ButtonArgs, control: &mut Control) -> Vec<Command> { //TODO Option<Command> ?
     match (args.state, args.button) {
         (Press, Keyboard(key))   =>
             note_on(key)
-                .or_else(|| patches(key))
                 .or_else(|| loop_rec(key))
                 .or_else(|| tap_tempo(key))
                 .or_else(|| transpose(key))
                 .map_or(vec![], |v| vec![v]),
         (Release, Keyboard(key)) =>
             note_off(key)
+                .or_else(|| mode(key, control))
                 .map_or(vec![], |v| vec![v]),
         _ => vec![],
     }
@@ -93,22 +94,6 @@ fn pitches(key: Key) -> Option<(Pitch, Discriminator)> { //TODO shift => sharp p
     }
 }
 
-fn patches(key: Key) -> Option<Command> {
-    match key {
-        Key::D1 => Some(SetPatchNo(0)),
-        Key::D2 => Some(SetPatchNo(1)),
-        Key::D3 => Some(SetPatchNo(2)),
-        Key::D4 => Some(SetPatchNo(3)),
-        Key::D5 => Some(SetPatchNo(4)),
-        Key::D6 => Some(SetPatchNo(5)),
-        Key::D7 => Some(SetPatchNo(6)),
-        Key::D8 => Some(SetPatchNo(7)),
-        Key::D9 => Some(SetPatchNo(8)),
-        Key::D0 => Some(SetPatchNo(9)),
-        _ => None,
-    }
-}
-
 fn loop_rec(key: Key) -> Option<Command> {
     match key {
         Key::F1 =>  Some(Loop(TogglePlayback(0))),
@@ -144,4 +129,11 @@ fn transpose(key: Key) -> Option<Command> {
         Key::RightBracket => Some(Transposer(TransposeKey(1))),
         _ => None,
     }
+}
+
+fn mode(key: Key, control: &mut Control) -> Option<Command> {
+    if key == Key::Tab {
+        control.mode = Mode::Editing(None);
+    }
+    None
 }
