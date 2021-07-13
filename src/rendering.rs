@@ -6,7 +6,7 @@ use rust_synth::core::control::synth::Id;
 use rust_synth::core::synth::{filter, oscillator};
 use rust_synth::core::tools::{arpeggiator, transposer, loops, pulse};
 use rust_synth::core::music_theory::{Hz, pitch::Pitch, diatonic_scale, rhythm::Note};
-use crate::control::Mode;
+use crate::control::{Mode, EditTarget, OscillatorTarget};
 
 pub type Color = [f32; 4];
 const BLACK: Color = [0.0, 0.0, 0.0, 1.0];
@@ -15,15 +15,15 @@ const WHITE: Color = [1.0, 1.0, 1.0, 1.0];
 pub fn draw(view: tools::View, mode: Mode, window: &mut PistonWindow, glyphs: &mut Glyphs, e: &Event) {
     window.draw_2d(e, |c: Context, g: &mut G2d| {
         clear(BLACK, g);
+        draw_text("~ Sintetizador Maravilhoso ~", 250., 40., glyphs, c, g);
+        draw_mode(mode, 10., 80., glyphs, c, g);
 
-        draw_mode(mode, 10., 20., glyphs, c, g);
-
-        draw_volume(view.synth.instrument.volume, 670., 60., glyphs, c, g);
-        draw_oscillator(view.synth.instrument.oscillator, 10., 60., glyphs, c, g);
-        draw_filter(view.synth.instrument.filter, 10., 80., glyphs, c, g);
+        draw_volume(view.synth.instrument.volume, 670., 120., glyphs, c, g);
+        draw_oscillator(view.synth.instrument.oscillator, 10., 120., glyphs, c, g);
+        draw_filter(view.synth.instrument.filter, 10., 140., glyphs, c, g);
 
         if let Some(arp) = view.arpeggiator {
-            draw_arpeggiator(arp, view.arp_index, 10., 160., glyphs, c, g);
+            draw_arpeggiator(arp, view.arp_index, 10., 200., glyphs, c, g);
         }
 
         draw_pulse(view.pulse, 680., 700., glyphs, c, g);
@@ -34,7 +34,23 @@ pub fn draw(view: tools::View, mode: Mode, window: &mut PistonWindow, glyphs: &m
 }
 
 pub fn draw_mode(mode: Mode, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Context, g: &mut G2d) {
-    draw_text(format!("{:?}", mode).as_str(), x, y, glyphs, c, g);
+    let text: &str = match mode {
+        Mode::Editing(target) => {
+            match target {
+                None => "editing",
+                Some(EditTarget::Oscillator(osc)) =>
+                    match osc {
+                        None => "editing > oscillator",
+                        Some(OscillatorTarget::Pulse) => "editing > oscillator > pulse",
+                        Some(OscillatorTarget::Mix) => "editing > oscillator > detuned mix",
+                    }
+                Some(EditTarget::Filter) => "editing > filter",
+                Some(EditTarget::Arpeggiator) => "editing > arpeggiator",
+            }
+        },
+        Mode::Playing => "playing",
+    };
+    draw_text(text, x, y, glyphs, c, g);
 }
 
 pub fn draw_oscillator(view: oscillator::View, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Context, g: &mut G2d) {
