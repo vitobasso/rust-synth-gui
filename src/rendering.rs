@@ -7,6 +7,7 @@ use rust_synth::core::synth::{filter, oscillator, lfo};
 use rust_synth::core::tools::{arpeggiator, transposer, loops, pulse};
 use rust_synth::core::music_theory::{Hz, pitch::Pitch, diatonic_scale, rhythm::Note};
 use crate::control::{Mode, EditTarget, OscillatorTarget};
+use rust_synth::core::synth::instrument::ModTarget;
 
 pub type Color = [f32; 4];
 const BLACK: Color = [0.0, 0.0, 0.0, 1.0];
@@ -20,10 +21,10 @@ pub fn draw(view: tools::View, mode: Mode, window: &mut PistonWindow, glyphs: &m
 
         draw_volume(view.synth.instrument.volume, 670., 120., glyphs, c, g);
         draw_oscillator(view.synth.instrument.oscillator, 10., 120., glyphs, c, g);
-        draw_filter(view.synth.instrument.filter, 10., 140., glyphs, c, g);
+        draw_filter(view.synth.instrument.filter, 10., 145., glyphs, c, g);
 
         if let Some(lfo) = view.synth.instrument.lfo {
-            draw_lfo(lfo, 10., 160., glyphs, c, g);
+            draw_lfo(lfo, 10., 170., glyphs, c, g);
         }
 
         if let Some(arp) = view.arpeggiator {
@@ -50,6 +51,7 @@ pub fn draw_mode(mode: Mode, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Conte
                     }
                 Some(EditTarget::Filter) => "editing > filter",
                 Some(EditTarget::Arpeggiator) => "editing > arpeggiator",
+                Some(EditTarget::LFO) => "editing > lfo",
             }
         },
         Mode::Playing => "playing",
@@ -91,10 +93,22 @@ pub fn draw_filter(view: filter::View, x: Scalar, y: Scalar, glyphs: &mut Glyphs
 }
 
 pub fn draw_lfo(view: lfo::View, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Context, g: &mut G2d) {
-    draw_text(format!("{:?}", view.target).as_str(), x, y, glyphs, c, g);
-    draw_meter_vertical(view.amount, x + 60., y, c, g);
-    draw_meter_vertical(view.freq, x + 80., y, c, g);
-    draw_oscillator(view.oscillator, x + 100., y, glyphs, c, g);
+    use ModTarget::*;
+    use filter::ModTarget::*;
+    use oscillator::ModTarget::*;
+    let target = match view.target {
+        Noop => "",
+        Volume => "volume",
+        Filter(Cutoff) => "filter > cutoff",
+        Filter(QFactor) => "filter > resonance",
+        Oscillator(PulseDuty) => "oscillator > pulse duty cycle",
+    };
+    draw_text(format!("LFO: {}", target).as_str(), x, y, glyphs, c, g);
+    draw_text("amount: ", x + 300., y, glyphs, c, g);
+    draw_meter_vertical(view.amount, x + 380., y, c, g);
+    draw_text("frequency: ", x + 440., y, glyphs, c, g);
+    draw_meter_vertical(view.freq, x + 560., y, c, g);
+    draw_oscillator(view.oscillator, x + 600., y, glyphs, c, g);
 }
 
 fn draw_arpeggiator(view: arpeggiator::View, index: f64, x: Scalar, y: Scalar, glyphs: &mut Glyphs, c: Context, g: &mut G2d) {

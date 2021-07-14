@@ -37,6 +37,7 @@ pub enum EditTarget {
     Oscillator(Option<OscillatorTarget>),
     Filter,
     Arpeggiator,
+    LFO,
 }
 
 #[derive(Copy, Clone, Debug)]

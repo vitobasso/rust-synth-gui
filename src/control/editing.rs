@@ -3,10 +3,11 @@ use piston_window::{Input, Input::{Button, Move}, ButtonArgs, ButtonState::*, Bu
 use crate::control::{Control, Mode, EditTarget, OscillatorTarget};
 use rust_synth::core::control::synth::Command::SetPatch;
 use rust_synth::core::control::tools::{Command, Patch};
-use rust_synth::core::synth::{oscillator, filter};
+use rust_synth::core::synth::{oscillator, filter, lfo};
 use rust_synth::core::synth::oscillator::Specs;
 use rust_synth::core::tools::arpeggiator;
 use rust_synth::core::music_theory::diatonic_scale::OctaveShift;
+use rust_synth::core::synth::instrument::ModTarget;
 
 pub fn handle_input(input: &Input, window_size: [f64;2], control: &mut Control) -> Vec<Command>{
     match input {
@@ -45,6 +46,7 @@ fn handle_key(key: Key, control: &mut Control) -> Vec<Command> {
         Mode::Editing(Some(Oscillator(_))) => oscillator(key, control),
         Mode::Editing(Some(Filter)) => filter(key, control),
         Mode::Editing(Some(Arpeggiator)) => arpeggiator(key, control),
+        Mode::Editing(Some(LFO)) => lfo(key, control),
         _ => panic!(),
     }
 }
@@ -55,6 +57,7 @@ fn main_menu(key: Key, control: &mut Control) -> Vec<Command> {
         Key::O => control.mode = Mode::Editing(Some(EditTarget::Oscillator(None))),
         Key::F => control.mode = Mode::Editing(Some(EditTarget::Filter)),
         Key::A => control.mode = Mode::Editing(Some(EditTarget::Arpeggiator)),
+        Key::L => control.mode = Mode::Editing(Some(EditTarget::LFO)),
         _ => (),
     }
     vec![]
@@ -88,8 +91,6 @@ fn oscillator(key: Key, control: &mut Control) -> Vec<Command> {
         _ => main_menu(key,control),
     }
 }
-
-
 
 fn filter(key: Key, control: &mut Control) -> Vec<Command> {
     let mut set = |spec: filter::TypeSpec| {
@@ -140,6 +141,32 @@ fn arpeggiator(key: Key, control: &mut Control) -> Vec<Command> {
     }
 }
 
+fn lfo(key: Key, control: &mut Control) -> Vec<Command> {
+    use lfo::Specs;
+    use ModTarget::*;
+    use oscillator::{Specs::Basic, Basic::*, ModTarget::*};
+    use filter::ModTarget::*;
+    let mut set = |f: fn(Specs) -> Specs| {
+        let old = control.instrument.lfo.clone().unwrap_or_else(|| Specs::default());
+        control.instrument.lfo = Some(f(old));
+        update_specs(control)
+    };
+    match key {
+        Key::D1 => set(|old| Specs { target: Volume, ..old}),
+        Key::D2 => set(|old| Specs { target: Filter(Cutoff), ..old}),
+        Key::D3 => set(|old| Specs { target: Filter(QFactor), ..old}),
+        Key::D4 => set(|old| Specs { target: Oscillator(PulseDuty), ..old}),
+        Key::F1 => set(|old| Specs { oscillator: Basic(Sine), ..old}),
+        Key::F2 => set(|old| Specs { oscillator: Basic(Saw), ..old}),
+        Key::F3 => set(|old| Specs { oscillator: Basic(Square), ..old}),
+        Key::D0 => {
+            control.instrument.lfo = None;
+            update_specs(control)
+        },
+        _ => main_menu(key,control),
+    }
+}
+
 fn handle_mouse(motion: &Motion, control: &mut Control, window_size: [f64;2]) -> Vec<Command> {
     match motion {
         MouseCursor(x, y) =>  handle_move(*x, *y, control, window_size),
@@ -177,6 +204,15 @@ fn handle_move(x: f64, y: f64, control: &mut Control, window_size: [f64;2]) {
                     let old = &arp.phrase;
                     let (octave_min, octave_max) = octaves_from_mouse(norm_x, norm_y);
                     arp.phrase = Specs { octave_min, octave_max, ..old.clone() };
+                }
+                _ => {}
+            }
+        },
+        Mode::Editing(Some(LFO)) => {
+            match &mut control.instrument.lfo {
+                Some(lfo) => {
+                    change_f64(&mut lfo.amount, norm_y, 0., 1.);
+                    change_f64(&mut lfo.freq, norm_x, 0., 55.); //TODO normalize, exponential scale
                 }
                 _ => {}
             }
