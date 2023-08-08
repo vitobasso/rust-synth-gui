@@ -169,7 +169,7 @@ fn lfo(key: Key, control: &mut Control) -> Vec<Command> {
 
 fn handle_mouse(motion: &Motion, control: &mut Control, window_size: [f64;2]) -> Vec<Command> {
     match motion {
-        MouseCursor(x, y) =>  handle_move(*x, *y, control, window_size),
+        MouseCursor([x, y]) =>  handle_move(*x, *y, control, window_size),
         _ => ()
     }
     update_specs(control)
