@@ -14,7 +14,7 @@ const BLACK: Color = [0.0, 0.0, 0.0, 1.0];
 const WHITE: Color = [1.0, 1.0, 1.0, 1.0];
 
 pub fn draw(view: tools::View, mode: Mode, window: &mut PistonWindow, glyphs: &mut Glyphs, e: &Event) {
-    window.draw_2d(e, |c: Context, g: &mut G2d| {
+    window.draw_2d(e, |c: Context, g: &mut G2d, _| {
         clear(BLACK, g);
         draw_text("~ Sintetizador Maravilhoso ~", 250., 40., glyphs, c, g);
         draw_mode(mode, 10., 80., glyphs, c, g);
